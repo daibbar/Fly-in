@@ -1,2 +1,33 @@
 # Fly-in
-n efficient drone routing system that navigates multiple drones through connected zones while minimizing simulation turns and handling movement constraints.
+an efficient drone routing system that navigates multiple drones
+through connected zones while minimizing simulation turns and handling movement
+constraints.
+
+Drones have been used to herd sheep in New Zealand, replacing sheepdogs with buzzing
+aerial shepherds. In Japan, office buildings deploy drones that play loud music and flash
+lights to literally chase overworked employees home. One drone was trained to paint
+graffiti on walls mid-flight — a rebellious blend of tech and street art. In Sweden, sci-
+entists used drones to sniff out whale poop floating on the ocean to study endangered
+species. Some experimental drones are shaped like birds or insects to spy without being
+noticed, flapping wings and all. There’s even a drone that flies by flapping soap bubbles,
+no propellers involved. In volcano research, a drone once flew straight into an eruption
+cloud, melted mid-air, but managed to send back data just seconds before disintegration.
+And in South Korea, synchronized drone shows have replaced fireworks — safer, silent,
+and somehow even more magical.
+The phrase comes from the idea that the wheel is a brilliant invention that’s been around
+forever and works really well. Since there’s nothing wrong with it, trying to invent it
+again wouldn’t really help and could be a waste of time—especially when that time could
+be spent solving new problems instead.
+In programming, this happens when someone builds something from scratch that already
+exists — like writing your own sorting algorithm or framework when solid, open-source
+versions are already out there. But it’s not all bad: doing it yourself can be a great way
+to learn how things work under the hood. The key is to find a balance — don’t rebuild
+everything, but take time to explore how the tools you’re using actually work. That way,
+you’ll grow as a developer without getting stuck reinventing the same old wheels.
+
+**brief**
+Don't waste time rebuilding existing, well-tested solutions when you're trying to solve actual problems—use what already works, but feel free to build things from scratch if your main goal is practice and deep learning.
+
+It boils down to choosing the right tool for your goal:
+    For efficiency & results: Rely on existing tools (don't reinvent the wheel).
+    For learning & growth: Build it yourself to understand how it works under the hood.
