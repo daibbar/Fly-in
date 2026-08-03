@@ -19,3 +19,6 @@ class HubError(ParserError):
 
 class ConnectionError(ParserError):
     pass
+
+class MetaDataError(ParserError):
+    pass
