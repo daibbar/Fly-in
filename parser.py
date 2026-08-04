@@ -1,6 +1,7 @@
 import re
 import exceptions as exc
 import webcolors
+import itertools
 
 
 # Easy Level 1: Simple linear path
@@ -21,38 +22,41 @@ import webcolors
 class Parser:
     patterns = {
         "nb_drones_pattern": r"(^\s*nb_drones:)(\s*([-+])?\d+\s*)$",
-        "start_hub": r"^\s*(start_hub:)\s*([^\s-)\s*(\d+)\s*(\d+)\s*(\[[A-Za-z\s]\]\s*)?$"
-
+        "start_hub_pattern": r"^\s*(start_hub:)\s*([^\s-)\s*(\d+)\s*(\d+)\s*(\[[A-Za-z=\s]\]\s*)?$",
+        "hub_pattern": r"^\s*(hub):\s*\w\s*\d+\s*\d+\s*(\[[A-Za-z=\s]\])?$",
+        "end_hub_pattern": r"^\s*end_hub:\s*goal\s*\d+\s*\d+\s*(\[[A-Za-z=\s\])?$",
+        "connection_pattern": r"^\s*connection:\s*\w-\w\s*(\[[A-Za-z=\s]\])?$",
+        "zone_optional_pattern": r"(?=\s*zone=([A-Za-z]+)\s*)(?=\s*color=([A-Za-z]+)\s*)(?=\s*max_drones=([1-9]+)\s*)$"
     }
+
     def __init__(self, map_path: str):
         self.map_path = map_path
 
-    @staticmethod
-    def valid_opt_combo(optional_combo: str):
-        combo = {r"\s*zone=([A-Za-z]+)\s*", r'\s*color=([A-Za-z]+)\s*', r'\s*max_drones=([1-9]+)\s*'}
-        optional_elems = optional_combo.split()
-        if len(optional_elems) != 3:
-            raise exc.MetaDataError("Invalid Meta Data")
-        for elem in optional_elems:
-            ## checks it against each combo if it fits pops it
-        ## if combo becomes empyt valid if not empty not valid
-
     def parse_lines(self):
-        lines = []
-        start_hub = False
-        end_hub = False
+        ## here in this step we take the valid lines from the file without checking the optional pattern
+        start_hub_found = False
+        end_hub_found = False
         with open(self.map_path, 'r') as f:
             for line in f:
                 if line.startswith('#'):
                     continue
             
             if re.match(Parser.patterns["nb_drones"], f.readline()):
-                lines += line
+                config_init = {"nb_drones": line}
             else:
                 raise exc.NbDronesError("The first line must define " \
                 "the number of drones using nb_drones: <positive_integer>.")
 
             for line in f:
+                if re.match(Parser.patterns["start_hub"] ,line):
+                    if "start_hub" in config_init:
+                        raise exc.StartHubError("only one start hub is allowed!")
+                    ## if this start hub valid add it if not continue
+                    config_init["start_hub"] = line
+
+                elif re.match(Parser.patterns["end_hub_pattern"], line):
+
+
 
                 
 
