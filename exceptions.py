@@ -22,3 +22,6 @@ class ConnectionError(ParserError):
 
 class MetaDataError(ParserError):
     pass
+
+class ValidationError(ParserError):
+    pass
