@@ -26,16 +26,16 @@ class Whcastar:
             self.link_reservations : dict[tuple[str, str, int], int] = dict()
 
 
-        def can_enter_zone(self, dest_zone: Zone, turn: int):
-            if dest_zone.name == self.graph.start_hub \
-                or dest_zone.name == self.graph.end_hub:
+        def can_enter_zone(self, candidate: Zone, turn: int):
+            if candidate.name == self.graph.start_hub \
+                or candidate.name == self.graph.end_hub:
                 return True
-            return self.zone_reservations.get((dest_zone.name, turn), 0) < \
-                dest_zone.max_drones
+            return self.zone_reservations.get((candidate.name, turn), 0) < \
+                candidate.max_drones
 
-        def can_use_link(self, current_zone: str, dest_zone: str, turn: int):
-            connection: tuple[str, str, int] = (current_zone, dest_zone, turn) if current_zone < dest_zone \
-                else (dest_zone, current_zone, turn)
+        def can_use_link(self, current_zone: str, candidate: str, turn: int):
+            connection: tuple[str, str, int] = (current_zone, candidate, turn) if current_zone < candidate \
+                else (candidate, current_zone, turn)
             return self.link_reservations.get(connection, 0) < \
                 self.graph.zones[connection[0]].neighbors[connection[1]]
 
@@ -114,55 +114,53 @@ class Whcastar:
         heuristic: dict[str, int] = self.dijkstra(self.graph, self.graph.end_hub)
         start_dijkstra : dict[str, int] = self.dijkstra(self.graph, self.graph.start_hub)
         fn = self.as_node_cost(heuristic, start_dijkstra)
-        min_heap = [(fn(self.graph.start_hub), self.graph.start_hub)]
-        while min_heap:
+
+        current_zone = self.graph.start_hub
+        while True:
+            if current_zone == self.graph.end_hub:
+                break
             candidates = []
-            current_fn, zone_name = heapq.heappop(min_heap)
-            for neighbor in self.graph.zones[zone_name].neighbors:
+            for neighbor in self.graph.zones[current_zone].neighbors:
                 heapq.heappush(candidates, (fn(neighbor), neighbor))
+                ## we need to give priority to priority zone agianst normal zone
 
-            while True:  
-                cost, dest_zone = heapq.heappop(candidates)        
-                if self.graph.zones[dest_zone].zone_type == 'restricted':
-                    if not (reservation_table.can_use_link(zone_name, dest_zone, drone.current_turn + 1) \
-                            and reservation_table.can_enter_zone(dest_zone, drone.current_turn + 2)):
-                            continue
-                    else:
-                        drone.path += [('link', f'{zone_name}-{dest_zone}', drone.current_turn + 1), ('zone', dest_zone, drone.current_turn + 2)]
+            #pop a neighbor candidate
+            cost, candidate = heapq.heappop(candidates)
+
+            # check if the zone is restricted because the approach would be different       
+            if self.graph.zones[candidate].zone_type == 'restricted':
+                #the zone is not available in the next turns chose another candidate
+                if not (reservation_table.can_use_link(current_zone, candidate, drone.current_turn + 1) \
+                        and reservation_table.can_enter_zone(candidate, drone.current_turn + 2)):
                         continue
-                if not (reservation_table.can_use_link(zone_name, dest_zone, drone.current_turn + 1) and
-                        reservation_table.can_enter_zone(dest_zone, drone.current_turn + 1)):
-                    continue
-
-                if self.graph.zones[dest_zone].zone_type == 'priority':
-                    drone.path += [('zone', dest_zone, drone.current_turn + 1)]
-                    heapq.heappush(min_heap, (fn(dest_zone), dest_zone))
-                    #update curent turn for drone
-                    break
-
-                #the zone is normal so just reserve a place for the next turn
-                elif self.graph.zones[dest_zone].zone_type == 'normal':
-                    drone.path += [('zone', dest_zone, drone.current_turn + 1)]
-                    break
+                #the zone is available reserve it, chose it as next zone and update the current turn
                 else:
-                    # he should wait here
-                    pass
-
-        
-
-
+                    drone.path.append({"current_zone": current_zone, "dest_zone": candidate, "turn": drone.current_turn + 2})
+                    drone.current_turn += 1
+                    current_zone = candidate
+                    continue
             
-        
+            elif not (reservation_table.can_use_link(current_zone, candidate, drone.current_turn + 1) and
+                    reservation_table.can_enter_zone(candidate, drone.current_turn + 1)):
+                continue
 
-    def fly_in(self, drones: list[Drone]):
-        resrvation_table = self.ReservationTable(self.graph)
+            if self.graph.zones[candidate].zone_type == 'priority' or \
+                self.graph.zones[candidate].zone_type == 'normal':
+                drone.path.append({"current_zone": current_zone, "dest_zone": dest_zone, 'turn': drone.current_turn + 1})
+                drone.current_turn += 1
+                current_zone = candidate
 
-        for drone in drones:
-            drone.path = self.find_path(drone, resrvation_table)
+            #just wait nothing to do
+            else:
+                drone.path.append({"current_zone": current_zone, "dest_zone": current_zone, 'turn': drone.current_turn + 1})
+                drone.current_turn += 1
+
+        for connection in drone.path:
+            reservation_table.reserve_zone(connection["dest_zone"], connection["turn"])
+            if drone.path["dest_zone"] == drone.path["current_zone"]:
+                continue
+            reservation_table.reserve_link(connection["current_zone"], connection["dest_zone"], connection["turn"])
+            if connection["dest_zone"].zone_type == 'restricted':
+                reservation_table.reserve_link(connection["current_zone"], connection["dest_zone"], connection["turn"] - 1)
 
         return drones
-
-
-
-
-        
