@@ -115,29 +115,33 @@ class Whcastar:
         start_dijkstra : dict[str, int] = self.dijkstra(self.graph, self.graph.start_hub)
         fn = self.as_node_cost(heuristic, start_dijkstra)
 
-        current_zone = self.graph.start_hub
+        timeline_universes = [(fn(current_zone), heuristic(current_zone), 0, self.graph.start_hub, [])]
+        _, _, current_turn, current_zone, path_history = heapq.heappop(timeline_universes)
+
+        candidates = []
+        heapq.heappush(candidates, fn(current_zone), heuristic(current_zone), current_turn + 1, current_zone,
+                        path_history.append(current_zone))
+        for neighbor in self.graph.zones[current_zone].neighbors:
+            heapq.heappush(candidates, (fn(neighbor), heuristic(neighbor), current_turn + 1, neighbor
+                        path_history.append(current_zone)))
+            ## we need to give priority to priority zone agianst normal zone
+
         while True:
+            _, _, current_turn, candidate, path_history = heapq.heappop(timeline_universes)
+            current_zone = path_history[-1]
             if current_zone == self.graph.end_hub:
                 break
-            candidates = []
-            for neighbor in self.graph.zones[current_zone].neighbors:
-                heapq.heappush(candidates, (fn(neighbor), neighbor))
-                ## we need to give priority to priority zone agianst normal zone
-
-            #pop a neighbor candidate
-            cost, candidate = heapq.heappop(candidates)
-
             # check if the zone is restricted because the approach would be different       
             if self.graph.zones[candidate].zone_type == 'restricted':
                 #the zone is not available in the next turns chose another candidate
-                if not (reservation_table.can_use_link(current_zone, candidate, drone.current_turn + 1) \
-                        and reservation_table.can_enter_zone(candidate, drone.current_turn + 2)):
+                if not (reservation_table.can_use_link(current_zone, candidate, current_turn + 1) \
+                        and reservation_table.can_enter_zone(candidate, current_turn + 2)):
                         continue
                 #the zone is available reserve it, chose it as next zone and update the current turn
                 else:
-                    drone.path.append({"current_zone": current_zone, "dest_zone": candidate, "turn": drone.current_turn + 2})
-                    drone.current_turn += 1
-                    current_zone = candidate
+                    path_history.append({"type": "connection", "zone": candidate, "turn": current_turn + 1})
+                    path_history.append({"zone": candidate, "turn", current_turn + 2})
+                    heapq.heappush(timeline_universes, (fn(candidate), heuristic(candidate), current_turn + 1))
                     continue
             
             elif not (reservation_table.can_use_link(current_zone, candidate, drone.current_turn + 1) and
