@@ -6,27 +6,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from models import Graph, Zone, ZoneType
 
 
-
-
-
-nb_drones = r"^\s*nb_drones:\s*([+-]?\d+)\s*$"
-
-
-
-# Easy Level 1: Simple linear path
-# nb_drones: 2
-
-# start_hub: start 0 0 [color=green]
-# hub: waypoint1 1 0 [color=blue]
-# hub: waypoint2 2 0 [color=blue]
-# end_hub: goal 3 0 [color=red]
-
-# connection: start-waypoint1
-# connection: waypoint1-waypoint2
-# connection: waypoint2-goal
-
-    
-
 # [] just like this after the numbers is it acceptable or no
 class Parser:
     patterns = {
@@ -57,7 +36,7 @@ class Parser:
         return meta_dict
 
     
-    def init_parse_lines(self) -> dict:
+    def _init_parse_lines(self) -> dict:
         """Parse and categorize map lines matching structural patterns."""
         config_init = {
             "nb_drones": None,
@@ -189,9 +168,10 @@ class Parser:
             color=color
         )
 
-    def validation_parser(self, config_init: dict) -> Graph:
+    def parse_validate(self) -> Graph:
         """Validates semantic logic and builds the Graph object."""
         
+        config_init: dict = self._init_parse_lines()
         # 1. Validate Drones
         raw_nb, nb_line = config_init["nb_drones"]
         nb_drones = int(raw_nb)            

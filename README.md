@@ -31,3 +31,5 @@ Don't waste time rebuilding existing, well-tested solutions when you're trying t
 It boils down to choosing the right tool for your goal:
     For efficiency & results: Rely on existing tools (don't reinvent the wheel).
     For learning & growth: Build it yourself to understand how it works under the hood.
+
+https://ojs.aaai.org/index.php/AIIDE/article/view/18726

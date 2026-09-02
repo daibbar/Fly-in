@@ -51,6 +51,5 @@ class Graph:
 
 @dataclass
 class Drone:
-    path: List[str]
-    history: List
-    current_turn: int = 0
+    id: str
+    path: List[dict[str, int]] = []
