@@ -52,4 +52,4 @@ class Graph:
 @dataclass
 class Drone:
     id: str
-    path: List[dict[str, int]] = []
+    path: List[Dict[str, any]] = field(default_factory=list)

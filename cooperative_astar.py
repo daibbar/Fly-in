@@ -1,4 +1,5 @@
 import heapq
+import itertools
 from models import Zone, Graph, Drone
 
 # graph = {
@@ -22,13 +23,14 @@ class CooperativeAstar:
             self.zone_reservations : dict[tuple[str, int], int] = dict()
             self.link_reservations : dict[tuple[str, str, int], int] = dict()
 
-
-        def can_enter_zone(self, neighbor: Zone, turn: int):
-            if neighbor.name == self.graph.current_zone \
-                or neighbor.name == self.graph.end_hub:
+        def can_enter_zone(self, zone_name: str, turn: int):
+            if zone_name == self.graph.start_hub \
+                or zone_name == self.graph.end_hub:
                 return True
-            return self.zone_reservations.get((neighbor.name, turn), 0) < \
-                neighbor.max_drones
+            
+            zone_obj = self.graph.zones[zone_name]
+            return self.zone_reservations.get((zone_name, turn), 0) < \
+                zone_obj.max_drones
 
         def can_use_link(self, current_zone: str, neighbor: str, turn: int):
             connection: tuple[str, str, int] = (current_zone, neighbor, turn) if current_zone < neighbor \
@@ -36,14 +38,13 @@ class CooperativeAstar:
             return self.link_reservations.get(connection, 0) < \
                 self.graph.zones[connection[0]].neighbors[connection[1]]
 
-
         def reserve_zone(self, zone_name: str, turn: int):
             if (self.can_enter_zone(zone_name, turn) is False):
                 return False
             if zone_name not in self.graph.zones:
                 return False
 
-            if zone_name == self.graph.current_zone or \
+            if zone_name == self.graph.start_hub or \
                 zone_name == self.graph.end_hub:
                 return True
 
@@ -86,11 +87,11 @@ class CooperativeAstar:
                 neighbor_zone = graph.zones[neighbor_name]
                 
                 # Immediately reject blocked zones
-                if neighbor_zone.zone_type == "blocked":
+                if neighbor_zone.zone_type.value == "blocked":
                     continue
                     
                 # Cost depends on the DESTINATION zone
-                cost = 2 if neighbor_zone.zone_type == "restricted" else 1
+                cost = 2 if neighbor_zone.zone_type.value == "restricted" else 1
                 new_distance = current_distance + cost
                 
                 # Update and push if we found a shorter path
@@ -100,44 +101,43 @@ class CooperativeAstar:
                     
         return distance
 
-    @staticmethod
-    def astar_node_cost(heuristic: dict[str, int], main_algo: dict[str, int]):
-        def fn(zone_name: str):
-            return heuristic[zone_name] + main_algo[zone_name]
-        return fn
-
-        
-
     def _find_path(self, drone: Drone, reservation_table: ReservationTable):
         heuristic: dict[str, int] = self.dijkstra(self.graph, self.graph.end_hub)
-        start_dijkstra : dict[str, int] = self.dijkstra(self.graph, self.graph.start_hub)
-        fn = self.astar_node_cost(heuristic, start_dijkstra)
-
+        # start_dijkstra : dict[str, int] = self.dijkstra(self.graph, self.graph.start_hub)
+        start_zone = self.graph.start_hub
+        f_start = 0 + heuristic[start_zone]
+        counter = itertools.count()
 
         zones = self.graph.zones
         spatio_timelines = []
-        start_zone = self.graph.start_hub
-        heapq.heappush(spatio_timelines, (fn(start_zone), heuristic[start_zone], 0, start_zone, 
-                    [{"zone": start_zone, "turn": 0}]))
+        heapq.heappush(spatio_timelines, (f_start, heuristic[start_zone], 0, start_zone, 
+                    next(counter), [{"zone": start_zone, "turn": 0}]))
         # now we will try to discover all the available spatio-timelines and push the available ones to the heap
+        visited = set()
         while True:
-            f, h, current_turn, current_zone, path_history = heapq.heappop(spatio_timelines)
+            f, h, current_turn, current_zone, _, path_history = heapq.heappop(spatio_timelines)
             if current_zone == self.graph.end_hub:
                 break
+
+            state = (current_zone, current_turn)
+            if state in visited:
+                continue
+            visited.add(state)
             if reservation_table.can_enter_zone(current_zone, current_turn + 1):
-                heapq.heappush(spatio_timelines, (f + 1, h, current_turn + 1, current_zone, path_history))
+                heapq.heappush(spatio_timelines, (f + 1, h, current_turn + 1, current_zone, next(counter), path_history))
 
             for neighbor in zones[current_zone].neighbors:
                 # check if the goal zone is restricted, if yes the taken actions will be different
-                if zones[neighbor].zone_type == 'restricted':
+                if zones[neighbor].zone_type.value == 'restricted':
                     if not (reservation_table.can_use_link(current_zone, neighbor, current_turn + 1) \
                         and reservation_table.can_use_link(current_zone, neighbor, current_turn + 2) \
                         and reservation_table.can_enter_zone(neighbor, current_turn + 2)):
                             continue
                     else:
                         new_path_history = path_history + [{"zone": neighbor, "turn": current_turn + 2}]    
-                        heapq.heappush(spatio_timelines, (fn(neighbor), heuristic[neighbor], 
-                                        current_turn + 2, neighbor, new_path_history))
+                        f_cost = (current_turn + 2) + heuristic[neighbor]
+                        heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
+                                        current_turn + 2, neighbor, next(counter), new_path_history))
                         continue
                 # if we can't use the link or can't use the zone in the next turn conitnue
                 if not (reservation_table.can_use_link(current_zone, neighbor, current_turn + 1) \
@@ -145,25 +145,43 @@ class CooperativeAstar:
                     continue
                 
                 # if the zone is priority or normal or an end_hub push it to the new_path_history
-                if zones[neighbor].zone_type == 'priority' or zones[neighbor].zone_type == 'normal' \
+                if zones[neighbor].zone_type.value == 'priority' or zones[neighbor].zone_type.value == 'normal' \
                     or zones[neighbor] == self.graph.end_hub:
                     new_path_history = path_history + [{"zone": neighbor, "turn": current_turn  + 1}]
-                    heapq.heappush(spatio_timelines, (fn(neighbor), heuristic[neighbor], 
-                                    current_turn + 1, neighbor, new_path_history))
+                    f_cost = (current_turn + 1) + heuristic[neighbor]
+                    heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
+                                    current_turn + 1, neighbor, next(counter), new_path_history))
         drone.path = path_history
+        
+        for i in range(1, len(drone.path)):
+            prev_move = drone.path[i - 1]
+            curr_move = drone.path[i]
 
-        for i, position in enumerate(drone.path):
-            if position["zone"] == self.graph.start_hub:
-                continue
-            previous_zone = drone.path[i - 1]["zone"]
-            if zones[position["zone"]].zone_type == 'restricted':
-                reservation_table.reserve_link(previous_zone, position["zone"], position["turn"] - 1)
-            reservation_table.reserve_zone(position["zone"], position["turn"])
-            reservation_table.reserve_link(previous_zone, position["zone"], position["turn"])
+            prev_zone = prev_move["zone"]
+            curr_zone = curr_move["zone"]
+            
+            is_restricted = zones[curr_zone].zone_type.value == 'restricted'
+            move_cost = 2 if is_restricted else 1
 
-    def assign_paths(drones: List[Drone]):
+            # 1. Reserve all the turns the drone spent waiting in the previous zone
+            wait_end_turn = curr_move["turn"] - move_cost
+            for t in range(prev_move["turn"] + 1, wait_end_turn + 1):
+                reservation_table.reserve_zone(prev_zone, t)
+
+            # 2. Reserve the link and the arrival
+            if is_restricted:
+                # Restricted zones take 2 turns, so lock the link for both transit turns[cite: 1]
+                reservation_table.reserve_link(prev_zone, curr_zone, curr_move["turn"] - 1)
+                reservation_table.reserve_link(prev_zone, curr_zone, curr_move["turn"])
+            else:
+                # Normal zones take 1 turn, so lock the link for the arrival turn[cite: 1]
+                reservation_table.reserve_link(prev_zone, curr_zone, curr_move["turn"])
+            
+            # The zone itself is always reserved on the turn it arrives[cite: 1]
+            reservation_table.reserve_zone(curr_zone, curr_move["turn"])
+
+    def assign_paths(self, drones: list[Drone]):
         reservation_table = self.ReservationTable(self.graph)
         for drone in drones:
             self._find_path(drone, reservation_table)
         return drones
-            

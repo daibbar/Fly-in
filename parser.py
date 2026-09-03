@@ -1,6 +1,5 @@
 import re
 import exceptions as exc
-import webcolors
 import itertools
 from typing import Any, Dict, List, Optional, Set, Tuple
 from models import Graph, Zone, ZoneType
@@ -22,8 +21,8 @@ class Parser:
     def parse_meta_data(self, raw_meta: Optional[str], line_num: int) -> Dict[str, str]:
         """Parses key-value tokens inside bracketed metadata."""
         meta_dict: Dict[str, str] = {}
-        # if not raw_meta:
-        #     return meta_dict
+        if not raw_meta:
+            return meta_dict
 
         tokens = raw_meta.strip().split()
         for token in tokens:

@@ -1,26 +1,38 @@
-PYTHON = python3
-PIP = pip3
+# Variables
+PYTHON      = python3
+PIP         = $(PYTHON) -m pip
+ENTRY       = main.py
+DEFAULT_MAP = maps/challenger/01_the_impossible_dream.txt
+MAP        ?= $(DEFAULT_MAP)
 
-.PHONY: install run debug clean lint lint-strict
+.PHONY: all install run debug clean lint lint-strict
 
+all: run
+
+# Install project dependencies and required linters
 install:
 	$(PIP) install --upgrade pip
 	$(PIP) install flake8 mypy
 
+# Execute the simulation
 run:
-	$(PYTHON) main.py maps/easy/01_linear_path.txt
+	$(PYTHON) $(ENTRY) $(MAP)
 
-# debug:
-# 	$(PYTHON) -m pdb main.py maps/easy_1.txt
+# Run with Python's built-in debugger (pdb)
+debug:
+	$(PYTHON) -m pdb $(ENTRY) $(MAP)
 
+# Mandatory linting rule matching the subject flags exactly[cite: 1]
 lint:
 	flake8 .
 	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
+# Optional strict checking recommended by the subject[cite: 1]
 lint-strict:
 	flake8 .
 	mypy . --strict
 
+# Clean temporary files, caches, and bytecode[cite: 1]
 clean:
-	rm -rf __pycache__ .mypy_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
+	rm -rf .mypy_cache .pytest_cache
