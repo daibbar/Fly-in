@@ -123,16 +123,19 @@ class Parser:
         return config_init
 
 
-    def _validate_zone(self, zone_data: dict) -> Zone:
+    def _validate_zone(self, zone_data: dict, is_end_start: bool, seen_coordinates: set[tuple]) -> Zone:
         """Helper method to validate a single zone and return a Zone object."""
         line_num = zone_data["line"]
         meta = self.parse_meta_data(zone_data["meta"], line_num)
 
-        # A. Verify coordinates
+        # A. Verify seen_coordinates
         try:
             x, y = int(zone_data["x"]), int(zone_data["y"])
+            if (x,y) in seen_coordinates:
+                raise exc.ValidationError(f"coordinates must be unique")
+            seen_coordinates.add((x,y))
         except ValueError:
-            raise exc.ValidationError(f"Line {line_num}: Coordinates must be integers.")
+            raise exc.ValidationError(f"Line {line_num}: seen_coordinates must be integers.")
 
         # B. Check zone type & map to Enum
         raw_type = meta.get("zone", "normal")
@@ -148,14 +151,19 @@ class Parser:
         color = meta.get("color", None)
 
         # D. Check capacity
-        try:
-            capacity = int(meta.get("max_drones", "1"))
-            if capacity <= 0:
-                raise ValueError
-        except ValueError:
-            raise exc.ValidationError(
-                f"Line {line_num}: Capacity (max_drones) must be a positive integer."
-            )
+        if not is_end_start:
+            try:
+                capacity = int(meta.get("max_drones", "1"))
+                if capacity <= 0:
+                    raise ValueError
+            except ValueError:
+                raise exc.MetaDataError(
+                    f"Line {line_num}: Capacity (max_drones) must be a positive integer."
+                )
+        else:
+            capacity = None
+
+
 
         # Build and return your beautiful dataclass!
         return Zone(
@@ -170,6 +178,7 @@ class Parser:
     def parse_validate(self) -> Graph:
         """Validates semantic logic and builds the Graph object."""
         
+        seen_coordinates = set()
         config_init: dict = self._init_parse_lines()
         # 1. Validate Drones
         raw_nb, nb_line = config_init["nb_drones"]
@@ -183,13 +192,18 @@ class Parser:
         graph = Graph(nb_drones=nb_drones)
 
         # 2. Validate Start Hub
-        start_zone = self._validate_zone(config_init["start_hub"])
+        start_zone = self._validate_zone(config_init["start_hub"], True, seen_coordinates)
+        if start_zone.zone_type.value == 'blocked':
+            raise exc.ValidationError("start hub can't be blocked!")
         start_zone.max_drones = nb_drones
         graph.add_zone(start_zone)
         graph.start_hub = start_zone.name
 
+
         # 3. Validate End Hub
-        end_zone = self._validate_zone(config_init["end_hub"])
+        end_zone = self._validate_zone(config_init["end_hub"], True, seen_coordinates)
+        if end_zone.zone_type.value == 'blocked':
+            raise exc.ValidationError("end hub can't be blocked!")
         if end_zone.name in graph.zones:
             raise exc.ValidationError(
                 f"Line {config_init['end_hub']['line']}: Duplicate zone name '{end_zone.name}'."
@@ -200,7 +214,7 @@ class Parser:
 
         # 4. Validate Regular Hubs
         for hub_data in config_init["hubs"]:
-            hub_zone = self._validate_zone(hub_data)
+            hub_zone = self._validate_zone(hub_data, False, seen_coordinates)
             if hub_zone.name in graph.zones:
                 raise exc.ValidationError(
                     f"Line {hub_data['line']}: Duplicate zone name '{hub_zone.name}'."

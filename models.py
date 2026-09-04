@@ -26,6 +26,7 @@ class Zone:
     color: Optional[str] = None
     # Use default_factory for mutable objects in dataclasses
     neighbors: Dict[str, int] = field(default_factory=dict) ## ??
+    is_end_start: bool = False
 
     def add_connection(self, neighbor_name: str, max_link_capacity: int = 1) -> None:
         self.neighbors[neighbor_name] = max_link_capacity

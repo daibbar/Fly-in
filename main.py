@@ -25,5 +25,5 @@ try:
 
 except Exception as e:
     # Print the real error during debugging instead of passing silently
-    traceback.print_exc()
+    print(f"Error: {e}")
     sys.exit(1)

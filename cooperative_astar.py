@@ -139,6 +139,7 @@ class CooperativeAstar:
                         heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
                                         current_turn + 2, neighbor, next(counter), new_path_history))
                         continue
+
                 # if we can't use the link or can't use the zone in the next turn conitnue
                 if not (reservation_table.can_use_link(current_zone, neighbor, current_turn + 1) \
                     and reservation_table.can_enter_zone(neighbor, current_turn + 1)):
