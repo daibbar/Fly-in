@@ -1,30 +1,19 @@
-# Variables
-PYTHON      = python3
-PIP         = $(PYTHON) -m pip
-ENTRY       = main.py
-DEFAULT_MAP = maps/easy/01_linear_path.txt
-MAP         = $(DEFAULT_MAP)
-
-all: run
+MAP ?= maps/easy/01_linear_path.txt
 
 install:
-	$(PIP) install --upgrade pip
-	$(PIP) install flake8 mypy
+	python3 -m venv venv
+	venv/bin/pip install --upgrade pip
+	venv/bin/pip install rich webcolors mypy flake8
 
 run:
-	$(PYTHON) $(ENTRY) $(MAP)
+	venv/bin/python main.py $(MAP)
 
 debug:
-	$(PYTHON) -m pdb $(ENTRY) $(MAP)
+	venv/bin/python -m pdb main.py $(MAP)
 
 lint:
-	flake8 .
-	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
-
-lint-strict:
-	flake8 .
-	mypy . --strict
+	venv/bin/flake8 .
+	venv/bin/mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	rm -rf .mypy_cache .pytest_cache
+	rm -rf venv __pycache__ .mypy_cache

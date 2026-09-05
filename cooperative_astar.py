@@ -69,11 +69,9 @@ class CooperativeAstar:
     @staticmethod
     def dijkstra(graph: Graph, start_name: str) -> dict[str, float]:
         """Compute shortest path distances from a start zone using Dijkstra."""
-        # 1. Initialize distances
         distance = {zone_name: float('inf') for zone_name in graph.zones}
         distance[start_name] = 0
         
-        # 2. Setup the priority queue
         heap = [(0, start_name)]
         
         while heap:
@@ -83,19 +81,15 @@ class CooperativeAstar:
                 continue
                 
             current_zone = graph.zones[zone_name]
-            # 3. Look at neighbors
             for neighbor_name in current_zone.neighbors:
                 neighbor_zone = graph.zones[neighbor_name]
                 
-                # Immediately reject blocked zones
                 if neighbor_zone.zone_type.value == "blocked":
                     continue
                     
-                # Cost depends on the DESTINATION zone
                 cost = 2 if neighbor_zone.zone_type.value == "restricted" else 1
                 new_distance = current_distance + cost
                 
-                # Update and push if we found a shorter path
                 if new_distance < distance[neighbor_name]:
                     distance[neighbor_name] = new_distance
                     heapq.heappush(heap, (new_distance, neighbor_name))
@@ -157,7 +151,6 @@ class CooperativeAstar:
                     or zones[neighbor] == self.graph.end_hub:
                     new_path_history = path_history + [{"zone": neighbor, "turn": current_turn  + 1}]
                     f_cost = (current_turn + 1) + heuristic[neighbor]
-                    #f_cost = 0 + heuristic[neighbor]
                     heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
                                     current_turn + 1, neighbor, next(counter), new_path_history))
         else:

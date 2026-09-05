@@ -25,8 +25,11 @@ To run the project, use the following commands:
 * Dijikstra's algorithm: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 * Graph Data Structure Introduction and Problems: https://www.geeksforgeeks.org/dsa/graph-data-structure/
 
-## AI-usage
-AI was used in this project as a tool of search about the domain and the standard references, also he was very helpful in how to implement the algorithm.
+    ## AI-usage
+    AI was used in this project as a tool of search about the domain and the standard references, also he was very helpful in how to implement the algorithm.
+    it was also helpful in explaining what is P and NP problem, and the difference between NP-hard and NP-complete.
+    you can check this conversation here:
+    * https://share.gemini.google/TxCeiwhZrSwB
 
 # Algorithm Choices And Implementation Strategy
 I used this section from the subject as a principle to decide what algorithm to choose and how to choose it.
@@ -60,3 +63,14 @@ connection: roof1-roof2
 connection: roof2-goal
 connection: corridorA-tunnelB [max_link_capacity=2]
 connection: tunnelB-goal
+
+
+user@arawkan ~/projects/Fly-in
+ % make run
+MAP=maps/easy/01_linear_path.txt python3 main.py
+maps/easy/01_linear_path.txt
+D1-corridorA
+D1-tunnelB D2-corridorA
+D1-goal D2-tunnelB
+D2-goal
+4

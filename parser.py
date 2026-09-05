@@ -4,7 +4,6 @@ import itertools
 from typing import Any, Dict, List, Optional, Set, Tuple
 from models import Graph, Zone, ZoneType
 
-
 # [] just like this after the numbers is it acceptable or no
 class Parser:
     """Parses and validates drone simulation map files."""
@@ -28,12 +27,45 @@ class Parser:
             return meta_dict
 
         tokens = raw_meta.strip().split()
+        if len(tokens) > 3:
+            raise exc.MetaDataError(f"Line {line_num}: the size of params in meta data is not valid")
+
+        found_keys = set()
         for token in tokens:
             if "=" not in token:
                 raise exc.MetaDataError(
                     f"Line {line_num}: Malformed metadata tag '{token}'"
                 )
             key, val = token.split("=", 1)
+            if key not in ("color", "zone", "max_drones"):
+                raise exc.MetaDataError("not valid option for meta data")
+            if key in found_keys:
+                raise exc.MetaDataError(f"Line {line_num}: duplicate meta data!")
+            found_keys.add(key)
+            meta_dict[key] = val
+        return meta_dict
+
+    def parse_conn_meta_data(self, raw_meta: Optional[str], line_num: int):
+        meta_dict: Dict[str, str] = {}
+        if not raw_meta:
+            return meta_dict
+
+        tokens = raw_meta.strip().split()
+        if len(tokens) > 2:
+            raise exc.MetaDataError(f"Line {line_num}: the size of params in meta data is not valid")
+
+        found_keys = set()
+        for token in tokens:
+            if "=" not in token:
+                raise exc.MetaDataError(
+                    f"Line {line_num}: Malformed metadata tag '{token}'"
+                )
+            key, val = token.split("=", 1)
+            if key not in ("color", "max_link_capacity"):
+                raise exc.MetaDataError(f"Line {line_num}: not valid option for meta data")
+            if key in found_keys:
+                raise exc.MetaDataError(f"Line {line_num}: duplicate meta data!")
+            found_keys.add(key)
             meta_dict[key] = val
         return meta_dict
 
@@ -135,7 +167,7 @@ class Parser:
         try:
             x, y = int(zone_data["x"]), int(zone_data["y"])
             if (x,y) in seen_coordinates:
-                raise exc.ValidationError(f"coordinates must be unique")
+                raise exc.ValidationError(f"Line {line_num}: coordinates must be unique")
             seen_coordinates.add((x,y))
         except ValueError:
             raise exc.ValidationError(f"Line {line_num}: seen_coordinates must be integers.")
@@ -152,6 +184,10 @@ class Parser:
 
         # C. Check color
         color = meta.get("color", None)
+        if color:
+            match = re.match(r"[a-z]+$", color)
+            if not match:
+                raise exc.MetaDataError(f"Line {line_num}: Accepted values for color are any valid single-word strings (e.g., red, blue)")
 
         # D. Check capacity
         if not is_end_start:
@@ -197,7 +233,7 @@ class Parser:
         # 2. Validate Start Hub
         start_zone = self._validate_zone(config_init["start_hub"], True, seen_coordinates)
         if start_zone.zone_type.value == 'blocked':
-            raise exc.ValidationError("start hub can't be blocked!")
+            raise exc.ValidationError(f"Line {nb_line}: start hub can't be blocked!")
         start_zone.max_drones = nb_drones
         graph.add_zone(start_zone)
         graph.start_hub = start_zone.name
@@ -206,7 +242,7 @@ class Parser:
         # 3. Validate End Hub
         end_zone = self._validate_zone(config_init["end_hub"], True, seen_coordinates)
         if end_zone.zone_type.value == 'blocked':
-            raise exc.ValidationError("end hub can't be blocked!")
+            raise exc.ValidationError(f"Line {nb_line}: end hub can't be blocked!")
         if end_zone.name in graph.zones:
             raise exc.ValidationError(
                 f"Line {config_init['end_hub']['line']}: Duplicate zone name '{end_zone.name}'."
@@ -245,7 +281,7 @@ class Parser:
                 )
             seen_connections.add(conn_pair)
 
-            meta = self.parse_meta_data(conn_data["meta"], line_num)
+            meta = self.parse_conn_meta_data(conn_data["meta"], line_num)
             try:
                 link_capacity = int(meta.get("max_link_capacity", "1"))
                 if link_capacity <= 0:

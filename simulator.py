@@ -1,35 +1,32 @@
+import webcolors
+from rich import print as rprint
 from typing import List
 from models import Drone, Graph
 from cooperative_astar import CooperativeAstar
 
-ANSI_COLORS = {
-    "red": "\033[91m",
-    "green": "\033[92m",
-    "yellow": "\033[93m",
-    "blue": "\033[94m",
-    "magenta": "\033[95m",
-    "cyan": "\033[96m",
-    "gray": "\033[90m",
-    "grey": "\033[90m",
-    "purple": "\033[35m",
-    "violet": "\033[95m",
-    "brown": "\033[33m",
-    "orange": "\033[33m",
-    "gold": "\033[93m",
-    "maroon": "\033[31m",
-    "darkred": "\033[31m",
-    "crimson": "\033[91m",
-    "rainbow": "\033[96m",
-    
-    "reset": "\033[0m"
+CUSTOM_COLORS = {
+    "rainbow": "#00ffff"  # A bright, victorious cyan! (or use "#ff00ff" for magenta)
 }
 
 def colorize(text: str, color_name: str | None) -> str:
-    """Wraps text in ANSI color codes if the color exists in the dictionary."""
-    if not color_name or color_name.lower() not in ANSI_COLORS:
+    """Wraps text in rich markup using exact Hex codes for perfect rendering."""
+    if not color_name:
         return text
-    return f"{ANSI_COLORS[color_name.lower()]}{text}{ANSI_COLORS['reset']}"
-
+        
+    color_lower = color_name.lower()
+    
+    # 1. Check if it's a special custom color first
+    if color_lower in CUSTOM_COLORS:
+        hex_val = CUSTOM_COLORS[color_lower]
+        return f"[{hex_val}]{text}[/{hex_val}]"
+        
+    try:
+        # 2. Ask webcolors for standard CSS3 Hex codes
+        hex_val = webcolors.name_to_hex(color_lower)
+        return f"[{hex_val}]{text}[/{hex_val}]"
+    except ValueError:
+        # 3. Safely fall back to normal text if the color is truly unknown (like "pizza")
+        return text
 
 class Simulator:
     """Manages the simulation and execution of drone routes across turns."""
@@ -82,5 +79,5 @@ class Simulator:
                 self.turns.append(' '.join(turn_moves))
         
         for turn_output in self.turns:
-            print(turn_output)
-        print(total_turns)
+            rprint(turn_output)
+        print(len(self.turns))
