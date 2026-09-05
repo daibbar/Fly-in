@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
 class ZoneType(Enum):
@@ -18,6 +18,18 @@ class ZoneType(Enum):
 
 @dataclass
 class Zone:
+    """Represents a hub or zone in the flight network.
+
+    Attributes:
+        name: Name identifier of the zone.
+        x: X-coordinate of the zone.
+        y: Y-coordinate of the zone.
+        zone_type: Zone category defining traversal rules and cost.
+        max_drones: Maximum number of drones allowed simultaneously.
+        color: Optional display color.
+        neighbors: Dictionary mapping neighbor names to link capacity.
+        is_end_start: Flag indicating if the zone is a start or end hub.
+    """
     name: str
     x: int
     y: int
@@ -29,20 +41,47 @@ class Zone:
     is_end_start: bool = False
 
     def add_connection(self, neighbor_name: str, max_link_capacity: int = 1) -> None:
+        """Adds a connection to a neighboring zone.
+
+        Args:
+            neighbor_name: Name of the neighboring zone.
+            max_link_capacity: Maximum capacity of the link.
+        """
         self.neighbors[neighbor_name] = max_link_capacity
 
 
 @dataclass
 class Graph:
+    """Represents the flight network of zones and drone configurations.
+
+    Attributes:
+        nb_drones: Total number of drones to route.
+        zones: Mapping of zone names to Zone instances.
+        start_hub: Name of the departure hub.
+        end_hub: Name of the destination hub.
+    """
     nb_drones: int
     zones: Dict[str, Zone] = field(default_factory=dict)
     start_hub: Optional[str] = None
     end_hub: Optional[str] = None
 
     def add_zone(self, zone: Zone) -> None:
+        """Adds a zone to the graph.
+
+        Args:
+            zone: The Zone instance to add.
+        """
         self.zones[zone.name] = zone
 
     def get_valid_neighbors(self, zone_name: str) -> List[str]:
+        """Returns non-blocked neighboring zones for a given zone.
+
+        Args:
+            zone_name: Name of the zone to inspect.
+
+        Returns:
+            List of names of adjacent non-blocked zones.
+        """
         zone = self.zones[zone_name]
         # Return neighbor names where the destination is not blocked
         return [
@@ -52,5 +91,11 @@ class Graph:
 
 @dataclass
 class Drone:
+    """Represents a drone and its planned flight path.
+
+    Attributes:
+        id: Unique identifier for the drone.
+        path: List of movements or state history.
+    """
     id: str
-    path: List[Dict[str, any]] = field(default_factory=list)
+    path: List[Dict[str, Any]] = field(default_factory=list)

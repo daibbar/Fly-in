@@ -2,17 +2,25 @@ import heapq
 import itertools
 from models import Zone, Graph, Drone
 
+
 class CooperativeAstar:
+    """Cooperative A* pathfinding algorithm for multi-drone routing."""
+
     def __init__(self, graph: Graph):
+        """Initialize the Cooperative A* pathfinder with the graph."""
         self.graph = graph
 
     class ReservationTable:
+        """Spatiotemporal reservation table for zone and link capacities."""
+
         def __init__(self, graph: Graph):
+            """Initialize empty reservations for the given graph."""
             self.graph = graph
             self.zone_reservations : dict[tuple[str, int], int] = dict()
             self.link_reservations : dict[tuple[str, str, int], int] = dict()
 
-        def can_enter_zone(self, zone_name: str, turn: int):
+        def can_enter_zone(self, zone_name: str, turn: int) -> bool:
+            """Check if a zone can accept a drone at the given turn."""
             if zone_name == self.graph.start_hub \
                 or zone_name == self.graph.end_hub:
                 return True
@@ -21,13 +29,15 @@ class CooperativeAstar:
             return self.zone_reservations.get((zone_name, turn), 0) < \
                 zone_obj.max_drones
 
-        def can_use_link(self, current_zone: str, neighbor: str, turn: int):
+        def can_use_link(self, current_zone: str, neighbor: str, turn: int) -> bool:
+            """Check if a link between zones is available at the given turn."""
             connection: tuple[str, str, int] = (current_zone, neighbor, turn) if current_zone < neighbor \
                 else (neighbor, current_zone, turn)
             return self.link_reservations.get(connection, 0) < \
                 self.graph.zones[connection[0]].neighbors[connection[1]]
 
-        def reserve_zone(self, zone_name: str, turn: int):
+        def reserve_zone(self, zone_name: str, turn: int) -> bool:
+            """Reserve capacity in a zone for a specific turn."""
             if (self.can_enter_zone(zone_name, turn) is False):
                 return False
             if zone_name not in self.graph.zones:
@@ -43,7 +53,8 @@ class CooperativeAstar:
                 self.zone_reservations[(zone_name, turn)] = 1
             return True
 
-        def reserve_link(self, current_zone: str, zone: str, turn: int):
+        def reserve_link(self, current_zone: str, zone: str, turn: int) -> bool:
+            """Reserve capacity on a link between zones for a specific turn."""
             link = (current_zone, zone, turn) if current_zone < zone else \
                     (zone, current_zone, turn)
             if (self.can_use_link(current_zone, zone, turn) is False):
@@ -56,7 +67,8 @@ class CooperativeAstar:
             return True
 
     @staticmethod
-    def dijkstra(graph: Graph, start_name: str):
+    def dijkstra(graph: Graph, start_name: str) -> dict[str, float]:
+        """Compute shortest path distances from a start zone using Dijkstra."""
         # 1. Initialize distances
         distance = {zone_name: float('inf') for zone_name in graph.zones}
         distance[start_name] = 0
@@ -90,10 +102,15 @@ class CooperativeAstar:
                     
         return distance
 
-    def _find_path(self, drone: Drone, reservation_table: ReservationTable):
-        heuristic: dict[str, int] = self.dijkstra(self.graph, self.graph.end_hub)
-        # start_dijkstra : dict[str, int] = self.dijkstra(self.graph, self.graph.start_hub)
+    def _find_path(self, drone: Drone, reservation_table: ReservationTable) -> None:
+        """Find and reserve a collision-free space-time path for a drone."""
+        heuristic: dict[str, float] = self.dijkstra(self.graph, self.graph.end_hub)
         start_zone = self.graph.start_hub
+        if heuristic[start_zone] == float('inf'):
+            raise ValueError(
+                f"No path found for drone {drone.id}: "
+                "graph may be disconnected"
+            )
         f_start = 0 + heuristic[start_zone]
         counter = itertools.count()
 
@@ -103,7 +120,7 @@ class CooperativeAstar:
                     next(counter), [{"zone": start_zone, "turn": 0}]))
         # now we will try to discover all the available spatio-timelines and push the available ones to the heap
         visited = set()
-        while True:
+        while spatio_timelines:
             f, h, current_turn, current_zone, _, path_history = heapq.heappop(spatio_timelines)
             if current_zone == self.graph.end_hub:
                 break
@@ -143,6 +160,8 @@ class CooperativeAstar:
                     #f_cost = 0 + heuristic[neighbor]
                     heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
                                     current_turn + 1, neighbor, next(counter), new_path_history))
+        else:
+            raise ValueError(f"No path found for drone {drone.id}: graph may be disconnected")
         drone.path = path_history
         
         for i in range(1, len(drone.path)):
@@ -172,7 +191,8 @@ class CooperativeAstar:
             # The zone itself is always reserved on the turn it arrives[cite: 1]
             reservation_table.reserve_zone(curr_zone, curr_move["turn"])
 
-    def assign_paths(self, drones: list[Drone]):
+    def assign_paths(self, drones: list[Drone]) -> list[Drone]:
+        """Assign collision-free paths to all drones sequentially."""
         reservation_table = self.ReservationTable(self.graph)
         for drone in drones:
             self._find_path(drone, reservation_table)

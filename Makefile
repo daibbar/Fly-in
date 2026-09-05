@@ -2,7 +2,7 @@
 PYTHON      = python3
 PIP         = $(PYTHON) -m pip
 ENTRY       = main.py
-DEFAULT_MAP = maps/challenger/01_the_impossible_dream.txt
+DEFAULT_MAP = maps/easy/01_linear_path.txt
 MAP         = $(DEFAULT_MAP)
 
 all: run

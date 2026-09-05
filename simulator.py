@@ -34,12 +34,16 @@ def colorize(text: str, color_name: str | None) -> str:
 
 
 class Simulator:
+    """Manages the simulation and execution of drone routes across turns."""
+
     def __init__(self, drones: list[Drone], graph: Graph):
+        """Initializes the simulator with drones and graph topology."""
         self.drones = drones
         self.graph = graph
         self.turns: List[str] = []
 
-    def run_simulation(self):
+    def run_simulation(self) -> None:
+        """Runs the simulation and prints formatted turn-by-turn drone movements."""
         if not self.drones:
             return
         total_turns = max(drone.path[-1]['turn'] for drone in self.drones)

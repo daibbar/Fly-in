@@ -7,6 +7,8 @@ from models import Graph, Zone, ZoneType
 
 # [] just like this after the numbers is it acceptable or no
 class Parser:
+    """Parses and validates drone simulation map files."""
+
     patterns = {
         "nb_drones_pattern": r"^\s*nb_drones:\s*(?P<nb_drones>[-+]?\d+)\s*$",
         "start_hub_pattern": r"^\s*start_hub:\s*(?P<sh_name>[^\s-]+)\s+(?P<sh_x>[-+]?\d+)\s+(?P<sh_y>[-+]?\d+)(\s*\[(?P<meta>[^\]]*)\])?\s*$",
@@ -16,6 +18,7 @@ class Parser:
     }
 
     def __init__(self, map_path: str):
+        """Initializes the parser with the map file path."""
         self.map_path = map_path
 
     def parse_meta_data(self, raw_meta: Optional[str], line_num: int) -> Dict[str, str]:
