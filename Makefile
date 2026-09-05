@@ -2,7 +2,7 @@
 PYTHON      = python3
 PIP         = $(PYTHON) -m pip
 ENTRY       = main.py
-DEFAULT_MAP = maps/hard/01_maze_nightmare.txt
+DEFAULT_MAP = maps/challenger/01_the_impossible_dream.txt
 MAP         = $(DEFAULT_MAP)
 
 all: run

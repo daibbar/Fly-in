@@ -2,17 +2,6 @@ import heapq
 import itertools
 from models import Zone, Graph, Drone
 
-# graph = {
-#     'A': {'B': 4, 'C': 5, 'F': 8},
-#     'B': {'A': 4, 'C': 11, 'D': 9, 'E': 7},
-#     'C': {'A': 5, 'B': 11, 'E': 3, 'F': 6},
-#     'D': {'B': 9, 'E': 2, 'F': 10},
-#     'E': {'B': 7, 'C': 3, 'D': 2, 'F': 4},
-#     'F': {'A': 8, 'C': 6, 'D': 10, 'E': 4}
-# }
-
-# alors le but est de trouve le minimum cout de A vers tous les noeuds du graph
-# alors on doit commnecer par une dict des distance de A vers tous les autres points
 class CooperativeAstar:
     def __init__(self, graph: Graph):
         self.graph = graph
@@ -136,6 +125,7 @@ class CooperativeAstar:
                     else:
                         new_path_history = path_history + [{"zone": neighbor, "turn": current_turn + 2}]    
                         f_cost = (current_turn + 2) + heuristic[neighbor]
+                        #f_cost = 0 + heuristic[neighbor]
                         heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
                                         current_turn + 2, neighbor, next(counter), new_path_history))
                         continue
@@ -150,6 +140,7 @@ class CooperativeAstar:
                     or zones[neighbor] == self.graph.end_hub:
                     new_path_history = path_history + [{"zone": neighbor, "turn": current_turn  + 1}]
                     f_cost = (current_turn + 1) + heuristic[neighbor]
+                    #f_cost = 0 + heuristic[neighbor]
                     heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
                                     current_turn + 1, neighbor, next(counter), new_path_history))
         drone.path = path_history
