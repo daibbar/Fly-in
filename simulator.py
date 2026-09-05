@@ -11,17 +11,15 @@ ANSI_COLORS = {
     "cyan": "\033[96m",
     "gray": "\033[90m",
     "grey": "\033[90m",
-    "reset": "\033[0m",
-
-    "purple": "\033[35m",     # Dark magenta
-    "violet": "\033[95m",     # Light magenta
-    "brown": "\033[33m",      # Standard yellow/brown
-    "orange": "\033[33m",     # Standard yellow/brown
-    "gold": "\033[93m",       # Bright yellow
-    "maroon": "\033[31m",     # Dark red
-    "darkred": "\033[31m",    # Dark red
-    "crimson": "\033[91m",    # Bright red
-    "rainbow": "\033[96m",    # Fun cyan to represent the impossible goal
+    "purple": "\033[35m",
+    "violet": "\033[95m",
+    "brown": "\033[33m",
+    "orange": "\033[33m",
+    "gold": "\033[93m",
+    "maroon": "\033[31m",
+    "darkred": "\033[31m",
+    "crimson": "\033[91m",
+    "rainbow": "\033[96m",
     
     "reset": "\033[0m"
 }
@@ -29,7 +27,7 @@ ANSI_COLORS = {
 def colorize(text: str, color_name: str | None) -> str:
     """Wraps text in ANSI color codes if the color exists in the dictionary."""
     if not color_name or color_name.lower() not in ANSI_COLORS:
-        return text  # Safely falls back to normal text!
+        return text
     return f"{ANSI_COLORS[color_name.lower()]}{text}{ANSI_COLORS['reset']}"
 
 
@@ -54,7 +52,7 @@ class Simulator:
             for drone in self.drones:
                 next_moves = [p for p in drone.path if p['turn'] >= current_turn]
                 if not next_moves:
-                    continue  # Drone is already done
+                    continue
                     
                 next_move = next_moves[0]
                 prev_move = drone.path[drone.path.index(next_move) - 1]
@@ -83,7 +81,6 @@ class Simulator:
             if turn_moves: 
                 self.turns.append(' '.join(turn_moves))
         
-        # Print the final formatted simulation output
         for turn_output in self.turns:
             print(turn_output)
         print(total_turns)
