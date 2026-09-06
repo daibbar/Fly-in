@@ -6,6 +6,7 @@ from parser import Parser
 from simulator import Simulator
 from exceptions import ParserError, MetaDataError
 
+
 def main() -> None:
     """Entry point: parses map, plans paths, and runs simulation."""
     if len(sys.argv) != 2:
@@ -20,10 +21,12 @@ def main() -> None:
         drones = [Drone(f"D{i}") for i in range(1, graph.nb_drones + 1)]
 
         reservation_table = ReservationTable(graph)
-        dijkstra = Dijkstra(graph, graph.end_hub)
+        dijkstra = Dijkstra(graph, graph.end_hub)  # type: ignore
         heuristic = dijkstra.standard_algo()
 
-        cooperative_astar = CooperativeAstar(graph, reservation_table, heuristic)
+        cooperative_astar = CooperativeAstar(
+            graph, reservation_table, heuristic
+        )
         cooperative_astar.assign_paths(drones)
 
         simulator = Simulator(drones, graph)

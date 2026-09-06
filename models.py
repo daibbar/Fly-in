@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
+
 class ZoneType(Enum):
     """Supported zone categories with their turn traversal costs."""
     NORMAL = "normal"
@@ -15,6 +16,7 @@ class ZoneType(Enum):
         if self == ZoneType.RESTRICTED:
             return 2
         return 1
+
 
 @dataclass
 class Zone:
@@ -34,12 +36,14 @@ class Zone:
     x: int
     y: int
     zone_type: ZoneType = ZoneType.NORMAL
-    max_drones: int = 1
+    max_drones: float = 1
     color: Optional[str] = None
     neighbors: Dict[str, int] = field(default_factory=dict)
     is_end_start: bool = False
 
-    def add_connection(self, neighbor_name: str, max_link_capacity: int = 1) -> None:
+    def add_connection(
+        self, neighbor_name: str, max_link_capacity: int = 1
+    ) -> None:
         """Adds a connection to a neighboring zone.
 
         Args:
@@ -71,6 +75,7 @@ class Graph:
             zone: The Zone instance to add.
         """
         self.zones[zone.name] = zone
+
 
 @dataclass
 class Drone:

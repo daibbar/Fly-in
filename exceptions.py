@@ -1,6 +1,3 @@
-
-
-
 class ParserError(Exception):
     """Base exception for parsing and syntax errors in the map file."""
     pass
