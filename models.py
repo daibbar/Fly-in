@@ -1,3 +1,5 @@
+"""Data models for the simulation graph and entities."""
+
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
@@ -5,6 +7,7 @@ from dataclasses import dataclass, field
 
 class ZoneType(Enum):
     """Supported zone categories with their turn traversal costs."""
+
     NORMAL = "normal"
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
@@ -20,7 +23,7 @@ class ZoneType(Enum):
 
 @dataclass
 class Zone:
-    """Represents a hub or zone in the flight network.
+    """Represent a hub or zone in the flight network.
 
     Attributes:
         name: Name identifier of the zone.
@@ -32,6 +35,7 @@ class Zone:
         neighbors: Dictionary mapping neighbor names to link capacity.
         is_end_start: Flag indicating if the zone is a start or end hub.
     """
+
     name: str
     x: int
     y: int
@@ -44,7 +48,7 @@ class Zone:
     def add_connection(
         self, neighbor_name: str, max_link_capacity: int = 1
     ) -> None:
-        """Adds a connection to a neighboring zone.
+        """Add a connection to a neighboring zone.
 
         Args:
             neighbor_name: Name of the neighboring zone.
@@ -55,7 +59,7 @@ class Zone:
 
 @dataclass
 class Graph:
-    """Represents the flight network of zones and drone configurations.
+    """Represent the flight network of zones and drone configurations.
 
     Attributes:
         nb_drones: Total number of drones to route.
@@ -63,13 +67,14 @@ class Graph:
         start_hub: Name of the departure hub.
         end_hub: Name of the destination hub.
     """
+
     nb_drones: int
     zones: Dict[str, Zone] = field(default_factory=dict)
     start_hub: Optional[str] = None
     end_hub: Optional[str] = None
 
     def add_zone(self, zone: Zone) -> None:
-        """Adds a zone to the graph.
+        """Add a zone to the graph.
 
         Args:
             zone: The Zone instance to add.
@@ -79,11 +84,12 @@ class Graph:
 
 @dataclass
 class Drone:
-    """Represents a drone and its planned flight path.
+    """Represent a drone and its planned flight path.
 
     Attributes:
         id: Unique identifier for the drone.
         path: List of movements or state history.
     """
+
     id: str
     path: List[Dict[str, Any]] = field(default_factory=list)

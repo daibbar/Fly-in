@@ -1,3 +1,4 @@
+"""Dijkstra shortest path algorithm implementation."""
 from models import Graph
 import heapq
 

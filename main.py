@@ -1,3 +1,4 @@
+"""Main entry point for the simulation."""
 from cooperative_astar import CooperativeAstar, ReservationTable
 from dijkstra import Dijkstra
 from models import Drone

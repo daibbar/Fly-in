@@ -1,3 +1,4 @@
+"""Cooperative A* pathfinding algorithm implementation."""
 import itertools
 from models import Zone, Graph, Drone  # noqa: F401
 import heapq

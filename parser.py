@@ -1,3 +1,5 @@
+"""Parser for reading and validating map files."""
+
 import re
 import exceptions as exc
 from typing import Any, Dict, Optional
@@ -5,7 +7,7 @@ from models import Graph, Zone, ZoneType
 
 
 class Parser:
-    """Parses and validates drone simulation map files."""
+    """Parse and validates drone simulation map files."""
 
     patterns = {
         "nb_drones_pattern": r"^\s*nb_drones:\s*(?P<nb_drones>[-+]?\d+)\s*$",
@@ -28,13 +30,13 @@ class Parser:
     }
 
     def __init__(self, map_path: str):
-        """Initializes the parser with the map file path."""
+        """Initialize the parser with the map file path."""
         self.map_path = map_path
 
     def parse_meta_data(
         self, raw_meta: Optional[str], line_num: int
     ) -> Dict[str, str]:
-        """Parses key-value tokens inside bracketed metadata."""
+        """Parse key-value tokens inside bracketed metadata."""
         meta_dict: Dict[str, str] = {}
         if not raw_meta:
             return meta_dict
@@ -66,6 +68,7 @@ class Parser:
     def parse_conn_meta_data(
         self, raw_meta: Optional[str], line_num: int
     ) -> Dict[str, str]:
+        """Parse connection metadata."""
         meta_dict: Dict[str, str] = {}
         if not raw_meta:
             return meta_dict
@@ -207,7 +210,7 @@ class Parser:
         self, zone_data: dict, is_end_start: bool,
         seen_coordinates: set[tuple[int, int]]
     ) -> Zone:
-        """Helper method to validate a single zone and return a Zone object."""
+        """Validate a single zone and return a Zone object."""
         line_num = zone_data["line"]
         meta = self.parse_meta_data(zone_data["meta"], line_num)
 
@@ -268,7 +271,7 @@ class Parser:
         )
 
     def parse_validate(self) -> Graph:
-        """Validates semantic logic and builds the Graph object."""
+        """Validate semantic logic and builds the Graph object."""
         seen_coordinates: set[tuple[int, int]] = set()
         config_init: dict = self._init_parse_lines()
         # 1. Validate Drones

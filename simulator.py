@@ -1,3 +1,5 @@
+"""Simulation execution and visualization."""
+
 import webcolors
 from rich import print as rprint
 from typing import List
@@ -9,9 +11,7 @@ CUSTOM_COLORS = {
 
 
 def colorize(text: str, color_name: str | None) -> str:
-    """Wraps text in rich markup using exact Hex codes
-    for perfect rendering.
-    """
+    """Wrap text in rich markup using exact Hex codes for perfect rendering."""
     if not color_name:
         return text
 
@@ -30,18 +30,16 @@ def colorize(text: str, color_name: str | None) -> str:
 
 
 class Simulator:
-    """Manages the simulation and execution of drone routes across turns."""
+    """Manage the simulation and execution of drone routes across turns."""
 
     def __init__(self, drones: list[Drone], graph: Graph):
-        """Initializes the simulator with drones and graph topology."""
+        """Initialize the simulator with drones and graph topology."""
         self.drones = drones
         self.graph = graph
         self.turns: List[str] = []
 
     def run_simulation(self) -> None:
-        """Runs the simulation and prints formatted turn-by-turn
-        drone movements.
-        """
+        """Run simulation and print turn-by-turn drone movements."""
         if not self.drones:
             return
         total_turns = max(drone.path[-1]['turn'] for drone in self.drones)
