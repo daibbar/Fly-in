@@ -5,14 +5,16 @@ from models import Drone, Graph
 from cooperative_astar import CooperativeAstar
 
 CUSTOM_COLORS = {
-    "rainbow": "#00ffff"
+    "default": "#00ffff"
 }
 
 def colorize(text: str, color_name: str | None) -> str:
     """Wraps text in rich markup using exact Hex codes for perfect rendering."""
     if not color_name:
         return text
-        
+
+    default_color = "#00ffff"
+
     color_lower = color_name.lower()
     if color_lower in CUSTOM_COLORS:
         hex_val = CUSTOM_COLORS[color_lower]
@@ -22,7 +24,7 @@ def colorize(text: str, color_name: str | None) -> str:
         hex_val = webcolors.name_to_hex(color_lower)
         return f"[{hex_val}]{text}[/{hex_val}]"
     except ValueError:
-        return text
+        return f"[{default_color}]{text}[/{default_color}]"
 
 class Simulator:
     """Manages the simulation and execution of drone routes across turns."""
