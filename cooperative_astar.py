@@ -21,9 +21,9 @@ class CooperativeAstar:
 
         def can_enter_zone(self, zone_name: str, turn: int) -> bool:
             """Check if a zone can accept a drone at the given turn."""
-            if zone_name == self.graph.start_hub \
-                or zone_name == self.graph.end_hub:
-                return True
+            # if zone_name == self.graph.start_hub \
+            #     or zone_name == self.graph.end_hub:
+            #     return True
             
             zone_obj = self.graph.zones[zone_name]
             return self.zone_reservations.get((zone_name, turn), 0) < \
@@ -43,9 +43,9 @@ class CooperativeAstar:
             if zone_name not in self.graph.zones:
                 return False
 
-            if zone_name == self.graph.start_hub or \
-                zone_name == self.graph.end_hub:
-                return True
+            # if zone_name == self.graph.start_hub or \
+            #     zone_name == self.graph.end_hub:
+            #     return True
 
             try:
                 self.zone_reservations[(zone_name, turn)] += 1
@@ -136,7 +136,6 @@ class CooperativeAstar:
                     else:
                         new_path_history = path_history + [{"zone": neighbor, "turn": current_turn + 2}]    
                         f_cost = (current_turn + 2) + heuristic[neighbor]
-                        #f_cost = 0 + heuristic[neighbor]
                         heapq.heappush(spatio_timelines, (f_cost, heuristic[neighbor], 
                                         current_turn + 2, neighbor, next(counter), new_path_history))
                         continue
@@ -174,14 +173,14 @@ class CooperativeAstar:
 
             # 2. Reserve the link and the arrival
             if is_restricted:
-                # Restricted zones take 2 turns, so lock the link for both transit turns[cite: 1]
+                # Restricted zones take 2 turns, so lock the link for both transit turns]
                 reservation_table.reserve_link(prev_zone, curr_zone, curr_move["turn"] - 1)
                 reservation_table.reserve_link(prev_zone, curr_zone, curr_move["turn"])
             else:
-                # Normal zones take 1 turn, so lock the link for the arrival turn[cite: 1]
+                # Normal zones take 1 turn, so lock the link for the arrival turn
                 reservation_table.reserve_link(prev_zone, curr_zone, curr_move["turn"])
             
-            # The zone itself is always reserved on the turn it arrives[cite: 1]
+            # The zone itself is always reserved on the turn it arrives
             reservation_table.reserve_zone(curr_zone, curr_move["turn"])
 
     def assign_paths(self, drones: list[Drone]) -> list[Drone]:

@@ -36,8 +36,7 @@ class Zone:
     zone_type: ZoneType = ZoneType.NORMAL
     max_drones: int = 1
     color: Optional[str] = None
-    # Use default_factory for mutable objects in dataclasses
-    neighbors: Dict[str, int] = field(default_factory=dict) ## ??
+    neighbors: Dict[str, int] = field(default_factory=dict)
     is_end_start: bool = False
 
     def add_connection(self, neighbor_name: str, max_link_capacity: int = 1) -> None:
@@ -72,22 +71,6 @@ class Graph:
             zone: The Zone instance to add.
         """
         self.zones[zone.name] = zone
-
-    def get_valid_neighbors(self, zone_name: str) -> List[str]:
-        """Returns non-blocked neighboring zones for a given zone.
-
-        Args:
-            zone_name: Name of the zone to inspect.
-
-        Returns:
-            List of names of adjacent non-blocked zones.
-        """
-        zone = self.zones[zone_name]
-        # Return neighbor names where the destination is not blocked
-        return [
-            neigh for neigh in zone.neighbors
-            if self.zones[neigh].zone_type != ZoneType.BLOCKED
-        ]
 
 @dataclass
 class Drone:

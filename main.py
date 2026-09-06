@@ -1,7 +1,6 @@
 from cooperative_astar import CooperativeAstar
 from models import Drone
 import sys
-import os
 from parser import Parser
 from simulator import Simulator
 from exceptions import ParserError, MetaDataError
@@ -9,7 +8,7 @@ from exceptions import ParserError, MetaDataError
 def main() -> None:
     """Entry point: parses map, plans paths, and runs simulation."""
     if len(sys.argv) != 2:
-        print("Usage: python3 main.py <map_file>")
+        print("Invalid number of arguments!")
         sys.exit(1)
 
     try:
@@ -26,13 +25,13 @@ def main() -> None:
         simulator.run_simulation()
     except MetaDataError as e:
         print(f"[MetaDataError]: {e}")
-        exit(1)
+        sys.exit(1)
     except ParserError as e:
         print(f"[ParserError]: {e}")
-        exit(1)
+        sys.exit(1)
     except ValueError as e:
         print(f"[ValueError]: {e}")
-        exit(1)
+        sys.exit(1)
     except (Exception, KeyboardInterrupt) as e:
         print(f"[Unexpected Error has happend]: {e}")
 

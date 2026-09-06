@@ -234,7 +234,7 @@ class Parser:
         start_zone = self._validate_zone(config_init["start_hub"], True, seen_coordinates)
         if start_zone.zone_type.value == 'blocked':
             raise exc.ValidationError(f"Line {nb_line}: start hub can't be blocked!")
-        start_zone.max_drones = nb_drones
+        start_zone.max_drones = float('inf')
         graph.add_zone(start_zone)
         graph.start_hub = start_zone.name
 
@@ -249,7 +249,7 @@ class Parser:
             )
         graph.add_zone(end_zone)
         graph.end_hub = end_zone.name
-        end_zone.max_drones = nb_drones
+        end_zone.max_drones = float('inf')
 
         # 4. Validate Regular Hubs
         for hub_data in config_init["hubs"]:

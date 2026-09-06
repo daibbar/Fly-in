@@ -5,7 +5,7 @@ from models import Drone, Graph
 from cooperative_astar import CooperativeAstar
 
 CUSTOM_COLORS = {
-    "rainbow": "#00ffff"  # A bright, victorious cyan! (or use "#ff00ff" for magenta)
+    "rainbow": "#00ffff"
 }
 
 def colorize(text: str, color_name: str | None) -> str:
@@ -14,18 +14,14 @@ def colorize(text: str, color_name: str | None) -> str:
         return text
         
     color_lower = color_name.lower()
-    
-    # 1. Check if it's a special custom color first
     if color_lower in CUSTOM_COLORS:
         hex_val = CUSTOM_COLORS[color_lower]
         return f"[{hex_val}]{text}[/{hex_val}]"
         
     try:
-        # 2. Ask webcolors for standard CSS3 Hex codes
         hex_val = webcolors.name_to_hex(color_lower)
         return f"[{hex_val}]{text}[/{hex_val}]"
     except ValueError:
-        # 3. Safely fall back to normal text if the color is truly unknown (like "pizza")
         return text
 
 class Simulator:
@@ -36,6 +32,7 @@ class Simulator:
         self.drones = drones
         self.graph = graph
         self.turns: List[str] = []
+
 
     def run_simulation(self) -> None:
         """Runs the simulation and prints formatted turn-by-turn drone movements."""
@@ -60,7 +57,7 @@ class Simulator:
                     colored_zone = colorize(zone_name, color_val)
 
                     turn_moves.append(f"{drone.id}-{colored_zone}")
-                        
+
                 elif next_move['turn'] > current_turn:
                     is_restricted = self.graph.zones[next_move['zone']].zone_type.value == 'restricted'
                     
@@ -77,7 +74,7 @@ class Simulator:
 
             if turn_moves: 
                 self.turns.append(' '.join(turn_moves))
-        
+
         for turn_output in self.turns:
             rprint(turn_output)
         print(len(self.turns))
