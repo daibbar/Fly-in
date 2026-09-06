@@ -1,4 +1,5 @@
-from cooperative_astar import CooperativeAstar
+from cooperative_astar import CooperativeAstar, ReservationTable
+from dijkstra import Dijkstra
 from models import Drone
 import sys
 from parser import Parser
@@ -18,7 +19,11 @@ def main() -> None:
 
         drones = [Drone(f"D{i}") for i in range(1, graph.nb_drones + 1)]
 
-        cooperative_astar = CooperativeAstar(graph)
+        reservation_table = ReservationTable(graph)
+        dijkstra = Dijkstra(graph, graph.end_hub)
+        heuristic = dijkstra.standard_algo()
+
+        cooperative_astar = CooperativeAstar(graph, reservation_table, heuristic)
         cooperative_astar.assign_paths(drones)
 
         simulator = Simulator(drones, graph)
