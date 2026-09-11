@@ -9,35 +9,36 @@ CUSTOM_COLORS = {
 }
 
 
-def colorize(text: str, color_name: str | None) -> str:
-    """Wrap text in rich markup using exact Hex codes for perfect rendering.
-
-    Args:
-        text (str): The text to colorize.
-        color_name (str | None): The name of the color to apply.
-
-    Returns:
-        str: The text wrapped in rich markup.
-    """
-    if not color_name:
-        return text
-
-    default_color = "#00ffff"
-
-    color_lower = color_name.lower()
-    if color_lower in CUSTOM_COLORS:
-        hex_val = CUSTOM_COLORS[color_lower]
-        return f"[{hex_val}]{text}[/{hex_val}]"
-
-    try:
-        hex_val = webcolors.name_to_hex(color_lower)
-        return f"[{hex_val}]{text}[/{hex_val}]"
-    except ValueError:
-        return f"[{default_color}]{text}[/{default_color}]"
-
-
 class Simulator:
     """Manage the simulation and execution of drone routes across turns."""
+
+    @staticmethod
+    def colorize(text: str, color_name: str | None) -> str:
+        """Wrap text in rich markup using exact Hex codes for perfect
+        rendering.
+
+        Args:
+            text (str): The text to colorize.
+            color_name (str | None): The name of the color to apply.
+
+        Returns:
+            str: The text wrapped in rich markup.
+        """
+        if not color_name:
+            return text
+
+        default_color = "#00ffff"
+
+        color_lower = color_name.lower()
+        if color_lower in CUSTOM_COLORS:
+            hex_val = CUSTOM_COLORS[color_lower]
+            return f"[{hex_val}]{text}[/{hex_val}]"
+
+        try:
+            hex_val = webcolors.name_to_hex(color_lower)
+            return f"[{hex_val}]{text}[/{hex_val}]"
+        except ValueError:
+            return f"[{default_color}]{text}[/{default_color}]"
 
     def __init__(self, drones: list[Drone], graph: Graph):
         """Initialize the simulator with drones and graph topology.
@@ -76,7 +77,7 @@ class Simulator:
                 if next_move['turn'] == current_turn:
                     zone_name = next_move['zone']
                     color_val = self.graph.zones[zone_name].color
-                    colored_zone = colorize(zone_name, color_val)
+                    colored_zone = self.colorize(zone_name, color_val)
 
                     turn_moves.append(f"{drone.id}-{colored_zone}")
 
@@ -93,8 +94,8 @@ class Simulator:
                         prev_color = self.graph.zones[prev_name].color
                         next_color = self.graph.zones[next_name].color
 
-                        colored_prev = colorize(prev_name, prev_color)
-                        colored_next = colorize(next_name, next_color)
+                        colored_prev = self.colorize(prev_name, prev_color)
+                        colored_next = self.colorize(next_name, next_color)
                         turn_moves.append(
                             f"{drone.id}-{colored_prev}-{colored_next}"
                         )
