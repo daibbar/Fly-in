@@ -63,14 +63,17 @@ connection: roof1-roof2
 connection: roof2-goal
 connection: corridorA-tunnelB [max_link_capacity=2]
 connection: tunnelB-goal
+```
 
-
-user@arawkan ~/projects/Fly-in
- % make run
-MAP=maps/easy/01_linear_path.txt python3 main.py
-maps/easy/01_linear_path.txt
+**Expected Output:**
+```text
+$ make run MAP=path/to/map.txt
 D1-corridorA
 D1-tunnelB D2-corridorA
 D1-goal D2-tunnelB
 D2-goal
 4
+```
+
+Each line is one simulation turn (space-separated drone movements), and the
+final line is the total number of turns taken to deliver every drone.

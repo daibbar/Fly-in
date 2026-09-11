@@ -30,13 +30,25 @@ class Parser:
     }
 
     def __init__(self, map_path: str):
-        """Initialize the parser with the map file path."""
+        """Initialize the parser with the map file path.
+
+        Args:
+            map_path (str): The path to the map file.
+        """
         self.map_path = map_path
 
     def parse_meta_data(
         self, raw_meta: Optional[str], line_num: int
     ) -> Dict[str, str]:
-        """Parse key-value tokens inside bracketed metadata."""
+        """Parse key-value tokens inside bracketed metadata.
+
+        Args:
+            raw_meta (Optional[str]): The raw metadata string to parse.
+            line_num (int): The line number being parsed, for error reporting.
+
+        Returns:
+            Dict[str, str]: A dictionary of metadata key-value pairs.
+        """
         meta_dict: Dict[str, str] = {}
         if not raw_meta:
             return meta_dict
@@ -68,7 +80,17 @@ class Parser:
     def parse_conn_meta_data(
         self, raw_meta: Optional[str], line_num: int
     ) -> Dict[str, str]:
-        """Parse connection metadata."""
+        """Parse connection metadata.
+
+        Args:
+            raw_meta (Optional[str]): The raw connection metadata string to
+                parse.
+            line_num (int): The line number being parsed.
+
+        Returns:
+            Dict[str, str]: A dictionary of connection metadata key-value
+                pairs.
+        """
         meta_dict: Dict[str, str] = {}
         if not raw_meta:
             return meta_dict
@@ -100,7 +122,11 @@ class Parser:
         return meta_dict
 
     def _init_parse_lines(self) -> dict:
-        """Parse and categorize map lines matching structural patterns."""
+        """Parse and categorize map lines matching structural patterns.
+
+        Returns:
+            dict: The initialized configuration dictionary.
+        """
         config_init: dict[str, Any] = {
             "nb_drones": None,
             "start_hub": None,
@@ -133,6 +159,13 @@ class Parser:
                         "<positive_integer>."
                     )
                 break
+
+            if config_init["nb_drones"] is None:
+                raise exc.NbDronesError(
+                    "The file must define the number of drones using "
+                    "nb_drones: <positive_integer> as its first "
+                    "non-comment line."
+                )
 
             # 2. Parse the remainder of the file
             for line in f:
@@ -210,7 +243,17 @@ class Parser:
         self, zone_data: dict, is_end_start: bool,
         seen_coordinates: set[tuple[int, int]]
     ) -> Zone:
-        """Validate a single zone and return a Zone object."""
+        """Validate a single zone and return a Zone object.
+
+        Args:
+            zone_data (dict): The data representing the zone.
+            is_end_start (bool): Whether the zone is a start or end hub.
+            seen_coordinates (set[tuple[int, int]]): A set of already seen
+                coordinates.
+
+        Returns:
+            Zone: A validated Zone object.
+        """
         line_num = zone_data["line"]
         meta = self.parse_meta_data(zone_data["meta"], line_num)
 
@@ -240,7 +283,7 @@ class Parser:
         # C. Check color
         color = meta.get("color", None)
         if color:
-            match = re.match(r"[a-z]+$", color)
+            match = re.match(r"\S+$", color)
             if not match:
                 raise exc.MetaDataError(
                     f"Line {line_num}: Accepted values for color are any "
@@ -271,7 +314,11 @@ class Parser:
         )
 
     def parse_validate(self) -> Graph:
-        """Validate semantic logic and builds the Graph object."""
+        """Validate semantic logic and builds the Graph object.
+
+        Returns:
+            Graph: The built and validated Graph object.
+        """
         seen_coordinates: set[tuple[int, int]] = set()
         config_init: dict = self._init_parse_lines()
         # 1. Validate Drones
@@ -283,8 +330,6 @@ class Parser:
                 f"(got {nb_drones})"
             )
 
-        graph = Graph(nb_drones=nb_drones)
-
         # 2. Validate Start Hub
         start_zone = self._validate_zone(
             config_init["start_hub"], True, seen_coordinates
@@ -294,8 +339,6 @@ class Parser:
                 f"Line {nb_line}: start hub can't be blocked!"
             )
         start_zone.max_drones = 10 ** 9
-        graph.add_zone(start_zone)
-        graph.start_hub = start_zone.name
 
         # 3. Validate End Hub
         end_zone = self._validate_zone(
@@ -305,24 +348,29 @@ class Parser:
             raise exc.ValidationError(
                 f"Line {nb_line}: end hub can't be blocked!"
             )
-        if end_zone.name in graph.zones:
+        if end_zone.name == start_zone.name:
             raise exc.ValidationError(
                 f"Line {config_init['end_hub']['line']}: Duplicate zone "
                 f"name '{end_zone.name}'."
             )
-        graph.add_zone(end_zone)
-        graph.end_hub = end_zone.name
         end_zone.max_drones = 10 ** 9
 
         # 4. Validate Regular Hubs
+        zones = {}
         for hub_data in config_init["hubs"]:
             hub_zone = self._validate_zone(hub_data, False, seen_coordinates)
-            if hub_zone.name in graph.zones:
+            if hub_zone.name in zones or hub_zone.name in (
+                start_zone.name, end_zone.name
+            ):
                 raise exc.ValidationError(
                     f"Line {hub_data['line']}: Duplicate zone name "
                     f"'{hub_zone.name}'."
                 )
-            graph.add_zone(hub_zone)
+            zones[hub_zone.name] = hub_zone
+
+        zones[start_zone.name] = start_zone
+        zones[end_zone.name] = end_zone
+        graph = Graph(nb_drones, start_zone.name, end_zone.name, zones)
 
         # 5. Validate Connections
         seen_connections = set()
@@ -336,6 +384,12 @@ class Parser:
                 raise exc.ValidationError(
                     f"Line {line_num}: Connection references undefined "
                     "zone(s)."
+                )
+
+            if from_hub == to_hub:
+                raise exc.ValidationError(
+                    f"Line {line_num}: A zone cannot connect to itself "
+                    f"('{from_hub}')."
                 )
 
             conn_pair = tuple(sorted([from_hub, to_hub]))

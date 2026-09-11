@@ -1,15 +1,20 @@
 """Main entry point for the simulation."""
-from cooperative_astar import CooperativeAstar, ReservationTable
+from cooperative_astar import CooperativeAstar
 from dijkstra import Dijkstra
 from models import Drone
 import sys
 from parser import Parser
 from simulator import Simulator
 from exceptions import ParserError, MetaDataError
+from reservation_table import ReservationTable
 
 
 def main() -> None:
-    """Entry point: parses map, plans paths, and runs simulation."""
+    """Entry point: parses map, plans paths, and runs simulation.
+
+    Returns:
+        None
+    """
     if len(sys.argv) != 2:
         print("Invalid number of arguments!")
         sys.exit(1)
@@ -22,7 +27,7 @@ def main() -> None:
         drones = [Drone(f"D{i}") for i in range(1, graph.nb_drones + 1)]
 
         reservation_table = ReservationTable(graph)
-        dijkstra = Dijkstra(graph, graph.end_hub)  # type: ignore
+        dijkstra = Dijkstra(graph, graph.end_hub)
         heuristic = dijkstra.standard_algo()
 
         cooperative_astar = CooperativeAstar(

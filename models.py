@@ -15,7 +15,11 @@ class ZoneType(Enum):
 
     @property
     def cost(self) -> int:
-        """Movement cost in turns to enter this zone."""
+        """Movement cost in turns to enter this zone.
+
+        Returns:
+            int: The movement cost.
+        """
         if self == ZoneType.RESTRICTED:
             return 2
         return 1
@@ -51,13 +55,15 @@ class Zone:
         """Add a connection to a neighboring zone.
 
         Args:
-            neighbor_name: Name of the neighboring zone.
-            max_link_capacity: Maximum capacity of the link.
+            neighbor_name (str): Name of the neighboring zone.
+            max_link_capacity (int): Maximum capacity of the link.
+
+        Returns:
+            None
         """
         self.neighbors[neighbor_name] = max_link_capacity
 
 
-@dataclass
 class Graph:
     """Represent the flight network of zones and drone configurations.
 
@@ -68,16 +74,26 @@ class Graph:
         end_hub: Name of the destination hub.
     """
 
-    nb_drones: int
-    zones: Dict[str, Zone] = field(default_factory=dict)
-    start_hub: Optional[str] = None
-    end_hub: Optional[str] = None
+    def __init__(
+        self,
+        nb_drones: int,
+        start_hub: str,
+        end_hub: str,
+        zones: Dict[str, Zone]
+    ):
+        self.nb_drones = nb_drones
+        self.start_hub = start_hub
+        self.end_hub = end_hub
+        self.zones = zones
 
     def add_zone(self, zone: Zone) -> None:
         """Add a zone to the graph.
 
         Args:
-            zone: The Zone instance to add.
+            zone (Zone): The Zone instance to add.
+
+        Returns:
+            None
         """
         self.zones[zone.name] = zone
 

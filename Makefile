@@ -12,7 +12,7 @@ debug:
 	venv/bin/python -m pdb main.py $(MAP)
 
 lint:
-	venv/bin/flake8 *.py
+	venv/bin/flake8 .
 	venv/bin/mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 clean:

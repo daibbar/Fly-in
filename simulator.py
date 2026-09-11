@@ -1,7 +1,6 @@
 """Simulation execution and visualization."""
 
 import webcolors
-from rich import print as rprint
 from typing import List
 from models import Drone, Graph
 
@@ -11,7 +10,15 @@ CUSTOM_COLORS = {
 
 
 def colorize(text: str, color_name: str | None) -> str:
-    """Wrap text in rich markup using exact Hex codes for perfect rendering."""
+    """Wrap text in rich markup using exact Hex codes for perfect rendering.
+
+    Args:
+        text (str): The text to colorize.
+        color_name (str | None): The name of the color to apply.
+
+    Returns:
+        str: The text wrapped in rich markup.
+    """
     if not color_name:
         return text
 
@@ -33,13 +40,22 @@ class Simulator:
     """Manage the simulation and execution of drone routes across turns."""
 
     def __init__(self, drones: list[Drone], graph: Graph):
-        """Initialize the simulator with drones and graph topology."""
+        """Initialize the simulator with drones and graph topology.
+
+        Args:
+            drones (list[Drone]): The list of drones in the simulation.
+            graph (Graph): The graph representing the map.
+        """
         self.drones = drones
         self.graph = graph
         self.turns: List[str] = []
 
     def run_simulation(self) -> None:
-        """Run simulation and print turn-by-turn drone movements."""
+        """Run simulation and print turn-by-turn drone movements.
+
+        Returns:
+            None
+        """
         if not self.drones:
             return
         total_turns = max(drone.path[-1]['turn'] for drone in self.drones)
@@ -86,6 +102,8 @@ class Simulator:
             if turn_moves:
                 self.turns.append(' '.join(turn_moves))
 
+        from rich.console import Console
+        console = Console()
         for turn_output in self.turns:
-            rprint(turn_output)
+            console.print(turn_output, soft_wrap=True)
         print(len(self.turns))
